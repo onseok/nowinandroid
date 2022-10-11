@@ -30,10 +30,14 @@ import com.google.samples.apps.nowinandroid.core.data.repository.TopicsRepositor
 import com.google.samples.apps.nowinandroid.core.data.repository.UserDataRepository
 import com.google.samples.apps.nowinandroid.core.data.util.NetworkMonitor
 import com.google.samples.apps.nowinandroid.core.data.util.SyncStatusMonitor
+import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig
+import com.google.samples.apps.nowinandroid.core.model.data.DarkThemeConfig.FOLLOW_SYSTEM
 import com.google.samples.apps.nowinandroid.core.model.data.FollowableAuthor
 import com.google.samples.apps.nowinandroid.core.model.data.FollowableTopic
 import com.google.samples.apps.nowinandroid.core.model.data.NewsResource
 import com.google.samples.apps.nowinandroid.core.model.data.SaveableNewsResource
+import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand
+import com.google.samples.apps.nowinandroid.core.model.data.ThemeBrand.DEFAULT
 import com.google.samples.apps.nowinandroid.core.ui.NewsFeedUiState
 import com.google.samples.apps.nowinandroid.feature.foryou.FollowedInterestsUiState.FollowedInterests
 import com.google.samples.apps.nowinandroid.feature.foryou.FollowedInterestsUiState.None
@@ -91,6 +95,20 @@ class ForYouViewModel @Inject constructor(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = emptySet()
+            )
+
+    /**
+     * The current theme of the app
+     */
+    val themeState: StateFlow<Pair<ThemeBrand, DarkThemeConfig>> =
+        userDataRepository.userDataStream
+            .map { userData ->
+                Pair(userData.themeBrand, userData.darkThemeConfig)
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = Pair(DEFAULT, FOLLOW_SYSTEM)
             )
 
     /**
@@ -253,6 +271,18 @@ class ForYouViewModel @Inject constructor(
                 inProgressTopicSelection = emptySet()
                 inProgressAuthorSelection = emptySet()
             }
+        }
+    }
+
+    fun updateThemeBrand(themeBrand: ThemeBrand) {
+        viewModelScope.launch {
+            userDataRepository.setThemeBrand(themeBrand)
+        }
+    }
+
+    fun updateDarkThemeConfig(darkThemeConfig: DarkThemeConfig) {
+        viewModelScope.launch {
+            userDataRepository.setDarkThemeConfig(darkThemeConfig)
         }
     }
 }
